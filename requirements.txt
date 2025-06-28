@@ -1,0 +1,8 @@
+moviepy
+librosa
+opencv-python
+pandas
+numpy
+scikit-image
+plotly
+tkinter
