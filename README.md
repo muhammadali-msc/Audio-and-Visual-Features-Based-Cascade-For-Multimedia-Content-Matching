@@ -71,10 +71,3 @@ __pycache__/
 *.pyd
 .env
 ```
-
-## 📊 Example Use Case
-
-This system has been tested on multi-hour broadcast recordings to identify:
-- 📺 Advertisement occurrences
-- 📆 Airtime tracking
-- 🎯 Duplicate content across archives
