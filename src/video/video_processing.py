@@ -51,11 +51,8 @@ def read_video(cap_video, frame_width, frame_height, display_title, frame_path, 
     if start_frame = end_frame then it will read a single frame.
     '''
 
-    #print("Hist = ", hist)
     frame_count = cap_video.get(cv2.CAP_PROP_FRAME_COUNT)
-    #print("////////////////////////////////////", len(last_frame))
     frame_list = list(last_frame)
-    #print("////////////////////////////////////", len(frame_list))
     hash_code = 0
     # if start isn't specified lets assume 0
     if start_frame < 0:  
@@ -74,26 +71,12 @@ def read_video(cap_video, frame_width, frame_height, display_title, frame_path, 
         if success:
             frame_resize = rescale_frame(frame, frame_width, frame_height, 60)
             if display_image:
-                #cv2.namedWindow("output", cv2.WINDOW_NORMAL) 
-              
-                #frame_resize = rescale_frame(frame, 60)
-                
                 cv2.imshow(display_title,frame_resize)
-                # Resize the Window
-                #cv2.resizeWindow("ouput", 1280, 720)
                 
             noise_remove = cv2.GaussianBlur(frame, (37, 37), 0)
-            #noise_remove = cv2.medianBlur(noise_remove, 15)
-            
-            #cv2.imwrite("./"+frame_path+"/frame" + str(start_frame)+ '.jpg',frame)
-            ### frame are in BRG mode it should be convert to RGB
-            #img = cv2.cvtColor(noise_remove, cv2.COLOR_BGR2RGB)
-            
             readed_frame = noise_remove.astype(int)
     
             if len(frame_list) > 0:
-                #print(frame_list[-1])
-                #print("-------------------------------------------")
                 prev_gray = cv2.cvtColor(frame_list[-1].astype(np.uint8), cv2.COLOR_BGR2GRAY)
                 curr_gray = cv2.cvtColor(readed_frame.astype(np.uint8), cv2.COLOR_BGR2GRAY)
                 # Calculate histograms for the frames
@@ -101,38 +84,25 @@ def read_video(cap_video, frame_width, frame_height, display_title, frame_path, 
                 curr_hist = cv2.calcHist([curr_gray], [0], None, [256], [0, 256])
                 # Calculate histogram difference using Bhattacharyya coefficient
                 hist_diff = cv2.compareHist(prev_hist, curr_hist, cv2.HISTCMP_BHATTACHARYYA)
-                #print("Hist Diff", hist_diff >= hist , hist_diff, hist)
                 # If the histogram difference exceeds a certain threshold, consider it a unique keyframe
                 if hist_diff >= hist:
-                    #print("Added FRAME")
                     cv2.imwrite("./"+frame_path+"/frame" + str(start_frame)+ '.jpg',frame)
                     if frame_hashcode:
                         hash_code = getHashCode(readed_frame, hash_code)
-                    #print("Index Start Frame", start_frame)
+                    
                     frame_list.append(readed_frame)
-                #else:
-                    #print("NOT ADDED")
             
-            #print(len(frame_list))
             if len(frame_list) == 0:
-                #print("//////////////////////////////////////// ADDED")
                 cv2.imwrite("./"+frame_path+"/frame" + str(start_frame)+ '.jpg',frame)
                 hash_code = getHashCode(readed_frame, hash_code)
-                #print("Index Start Frame", start_frame)
-                #print("LAST FRAME frame_list", len(last_frame))
                 frame_list.append(readed_frame)
-                #print("LAST FRAME frame_list", len(last_frame))
+
             start_frame += 1
             if cv2.waitKey(25) & 0xFF == ord('q') or start_frame >= end_frame:
-                #print("video is closed!")
                 cv2.destroyAllWindows()
                 break
         else:
-            #print("end of video")
             cv2.destroyAllWindows()
-            # exit()
-    #print("Total Frames ", len(frame_list))
-    #print("LAST FRAME", len(last_frame))
     return frame_list, hash_code
 
 def rescale_frame(frame, frame_width, frame_height, percent=75):
@@ -181,7 +151,6 @@ def displayImage(frame):
 #### displayImageWithText function will display an image along with text on window using cv2
 def displayImageWithText(loadImage, text):
     
-    #image = cv2.imread(loadImage)
     font = cv2.FONT_HERSHEY_SIMPLEX
     org = (50, 50)
     fontScale = 1
@@ -241,7 +210,6 @@ def matchHashCode_hamming(videoHashCode, clipHashCode):
 
     ssim_dist = ssim(clipHashCode, videoHashCode)
     
-    #print("Eculidean Distance {}, hamming dist {}, SSIM dist {}".format(euclidean_dist, hamming_distance, ssim_dist))
     return euclidean_dist, hamming_dist, ssim_dist
 
 def extractVideo(cap_video,frame_path, clip_frame_count):
@@ -298,73 +266,46 @@ def extractVideoFrame(cap_video, reference_video, query_video, video_path, video
     precentage_index = 0
     last_frames = list()
     query_frame_index = 0
-    #print("STARTING", frame_index, video_frame_count, query_durations )
+
     while frame_index <  video_frame_count:
         i += 1
         query_frame_index += 1
-        #print("Check Frame Index", i, clip_frame_count)
+        
         video_precentage = getVideoPercentage(frame_index,video_frame_count-1)
         if video_precentage >= precentage_index:
             print("{} % of video is processed! Current frame index {}".format(video_precentage, frame_index))
             precentage_index += 1
-        #print("Last frame", len(last_frames))
-        #if len(video_frame_list) == 0:
-            #print("Last Frame")
-            #last_frames = list()
-        #else:
-            #last_frames = [video_frame_list[-1]]
            
-
         readed_frame, hash_code = read_video(cap_video, frame_width, frame_height,"VIDEO PROCESS",video_path,start_frame= frame_index, end_frame=frame_index, display_image = False, frame_hashcode= False, last_frame = last_frames, hist = 0.15)
-        #print("Read Frames ", len(readed_frame), len(readed_frame) > 1)
-        #print("Last frame", len(last_frames))
-        
-     
+    
         if len(readed_frame) > 1:
             video_frame_list.append(readed_frame[1])
             last_frames = [video_frame_list[-1]]
             select_frame_index.append(frame_index)
-            #print("VIDEO FRAME ADDED", len(video_frame_list))
+
             if (len(video_frame_list) <=  clip_frame_list_count):
-                #print("ADD GET", len(readed_frame), readed_frame[1].shape, videoHashCode.shape)
                 videoHashCode = getHashCode(readed_frame[1], videoHashCode)
             else:
-                #print("ADD Update")
                 pervious_init_frame = video_frame_list.pop(0)
                 select_frame_index.pop(0)
                 videoHashCode = getUpdatedHashCode(pervious_init_frame, readed_frame[1], videoHashCode)
-                #print(videoHashCode.shape)
-            #print("Check /////////////////////////////////", len(video_frame_list) ,  clip_frame_list_count, i ,  clip_frame_count, i >=  clip_frame_count)
-            
-        
-        
-        #print(len(video_frame_list))
-        #print(cascade_detection , frame_index ==  video_frame_count)
-        if (cascade_detection and frame_index ==  video_frame_count and videoDetectCount == 0) or (query_frame_index >=  (clip_frame_count-5) and len(video_frame_list) >= clip_frame_list_count):
-                #print("matchHashCode_hamming_dist", len(video_frame_list), clip_frame_list_count)
-                eculidean_dist, matchHashCode_hamming_dist, ssim_dist = matchHashCode_hamming(videoHashCode, clipHashCode)
-                #print("VIUSAL Hashcode Matching", ssim_dist, eculidean_dist)
                 
+        if (cascade_detection and frame_index ==  video_frame_count and videoDetectCount == 0) or (query_frame_index >=  (clip_frame_count-5) and len(video_frame_list) >= clip_frame_list_count):
+
+                eculidean_dist, matchHashCode_hamming_dist, ssim_dist = matchHashCode_hamming(videoHashCode, clipHashCode)
+        
                 if ssim_dist >= video_ssim_threshold:
-                    #print("VISUAL HASHCODE INSIDE")
-                    #Image.fromarray((video_frame_list[0]* 1).astype(np.uint8)).convert('RGB').show()
-                    #Image.fromarray((video_frame_list[-1]* 1).astype(np.uint8)).convert('RGB').show()
+                    
                     if select_frame_index[0] < (frame_index - (clip_frame_count-1)):
                         start_frames_count = frame_index - (clip_frame_count-1)
                     else:
                         start_frames_count = select_frame_index[0]
                     
                     ending_frame_count = select_frame_index[-1]
-                    #print(int(query_duration*video_fps), clip_frame_list_count)
-                    #print("Duration ", getVideoDuration((frame_index - (clip_frame_list_count-1)),video_fps))
-                    #print("Duration ", getVideoDuration(int(frame_index - (int(query_duration*video_fps) - clip_frame_list_count)),video_fps))
-                    
+        
                     time_start_at = getVideoDuration(start_frames_count,video_fps) 
                     time_end_at = getVideoDuration(ending_frame_count,video_fps)
-                    
-                    #print("SSIM", ssim_dist, previous_ssim, ssim_dist > previous_ssim)
-                    
-                    
+
                     detect_timeline.append(str(time_start_at) + " to " + str(time_end_at))
 
                     detect_frame_list_pos.append([start_frames_count,ending_frame_count])
@@ -375,7 +316,6 @@ def extractVideoFrame(cap_video, reference_video, query_video, video_path, video
                                                          "Ending Frame Position": ending_frame_count,
                                                          "Matched Result" : ssim_dist,
                                                          "Video SSIM Threshold": video_ssim_threshold})
-                    #print("{} % of video is processed! Current frame index {}".format(getVideoPercentage(frame_index,video_frame_count-1), frame_index))
                     print("query video \"{}\" visual hashcode is matched with \"{}\" by matched distance \"{}\" at timestamp \"{}\" to \"{}\"".format(query_video, reference_video, ssim_dist, time_start_at, time_end_at))
                 
                     videoDetectCount = len(video_partial_detection_timeline)
@@ -384,20 +324,15 @@ def extractVideoFrame(cap_video, reference_video, query_video, video_path, video
                     videoHashCode = 0
                     readed_frame = None
                     video_frame_list.clear()
-                    #print("video_frame_list clear", len(video_frame_list))
                     select_frame_index.clear()
                     query_frame_index = 0
-                    #print("Current Frame Index SSIM Inside", frame_index)
                     
-                    #print("After Frame Index", frame_index, (query_duration*video_fps), clip_frame_list_count )
-        #print("Last frame", len(last_frames))
         if len(last_frames) == 0 and readed_frame is not None:
-            #print("ENTRING FIRST", len(readed_frame))
             videoHashCode = hash_code
             video_frame_list.append(readed_frame[0])
             last_frames = [video_frame_list[-1]]
             select_frame_index.append(frame_index)
-            #frame_index += 1
+
         frame_index += 1
     return videoDetectCount, detect_frame_list_pos, detect_timeline, video_partial_detection_timeline, videoHashCode
 
@@ -411,16 +346,12 @@ def multimediaVisualContentMatching(ref_videoPath, query_videoPath, clip_path, v
     
     video_fps, video_frame_count, ref_duration, video_frame_width, video_frame_height = getVideo_detail(ref_video_cap_cv)
 
-    #print(ref_duration)
     # Getting the frame info
     clip_fpss, clip_frame_counts, query_duration, clip_frame_width, clip_frame_height   = getVideo_detail(query_video_cap_cv)
-    #print(queryVideoHashCode)
+
     if len(queryVideoHashCode) == 0:
-        # Getting the clip frame list
-        #print("QUERY VIDEO")
         clip_frame_list, queryVideoHashCode = read_video(query_video_cap_cv, clip_frame_width, clip_frame_height, "CLIP PROCESS", clip_path,start_frame= -1, end_frame=-1, display_image = True, frame_hashcode= True, last_frame = list(), hist= 0.15)
-        #print("Total Query Video Frame", clip_frame_list)
-    
+
     if video_start_at is None or int(video_start_at*video_fps) - margin < 0:
         start_at = 0
     else:
@@ -437,7 +368,6 @@ def multimediaVisualContentMatching(ref_videoPath, query_videoPath, clip_path, v
     print("Total query frames {} \nStarting frame in reference video {} \nEnding frame in reference video {} \nProcessing total frames {} of video duration {} to {}".format(len(clip_frame_list), start_at,end_at,frame_count, video_start_at, video_end_at))
     print("//////////////////////////////////////////////////////")
     
-    #print(queryVideoHashCode)
     videoDetectCount , detect_frame_list_pos, detect_timeline, video_partial_detection_timeline, videoHashCode = extractVideoFrame(ref_video_cap_cv, reference_video, query_video, video_path, video_ssim_threshold, clip_frame_width, clip_frame_height, end_at, len(clip_frame_list), clip_frame_counts, queryVideoHashCode, query_duration, video_fps, start_at, cascade_detection)
 
     return videoDetectCount, detect_frame_list_pos, detect_timeline, video_partial_detection_timeline , clip_frame_list

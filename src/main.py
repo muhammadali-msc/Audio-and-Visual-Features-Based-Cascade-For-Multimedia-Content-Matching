@@ -56,12 +56,13 @@ if __name__ == "__main__":
         detect_frame_list_pos1 = manager.list()
 
         if model_choice == '1':
+            video_ssim_threshold = 0.8
             videoDetectCount, detect_frame_list_pos, detect_timeline, video_partial_detection_timeline, clip_frame_list = \
                 multimediaVisualContentMatching(ref_videoPath, query_videoPath, clip_path, video_path,
                                                 video_ssim_threshold, ref_video_file.fps, 0,
                                                 ref_video_file.duration, 1, -1, queryVideoHashCode=[],
                                                 cascade_detection=False)
-
+            detect_frame_list_pos1.extend(detect_frame_list_pos)
             title = "Video Processed Result Using Visual Detection"
 
         elif model_choice == '2':
